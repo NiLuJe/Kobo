@@ -529,8 +529,9 @@ main() {
             debug_log && do_debug_log "-- cooldown end,   $(date) --"
         fi
     done
-
-    kill -TERM $fbink_pid
 }
+
+# Kill the FBInk daemon on exit
+trap 'kill -TERM $fbink_pid' EXIT TERM INT QUIT
 
 main
