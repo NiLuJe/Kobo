@@ -363,6 +363,7 @@ fbink_check() {
     then
         if [ "$fbink_with_truetype" -eq "1" ]
         then
+            debug_log && do_debug_log "-- truetype FBInk daemon is already up --"
             return
         fi
 
@@ -381,15 +382,16 @@ fbink_check() {
         if [ $? -eq 0 ] && fbink_is_up
         then
             fbink_with_truetype=1
+            debug_log && do_debug_log "-- launched truetype FBInk daemon -- ${fbink_pid}"
         else
             fbink_pid=''
             fbink_with_truetype=-1
+            debug_log && do_debug_log "-- failed to launch truetype FBInk daemon"
         fi
-
-        debug_log && do_debug_log "-- launched truetype FBInk daemon -- ${fbink_pid}"
     else
         if [ "$fbink_with_truetype" -eq "0" ]
         then
+            debug_log && do_debug_log "-- bitmap FBInk daemon is already up --"
             return
         fi
 
@@ -403,12 +405,12 @@ fbink_check() {
         if [ $? -eq 0 ] && fbink_is_up
         then
             fbink_with_truetype=0
+            debug_log && do_debug_log "-- launched bitmap FBInk daemon -- ${fbink_pid}"
         else
             fbink_pid=''
             fbink_with_truetype=-1
+            debug_log && do_debug_log "-- failed to launch bitmap FBInk daemon"
         fi
-
-        debug_log && do_debug_log "-- launched bitmap FBInk daemon -- ${fbink_pid}"
     fi
 }
 
