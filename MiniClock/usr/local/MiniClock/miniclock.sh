@@ -339,6 +339,15 @@ fbink_is_up() {
     return 1
 }
 
+# Kill the current FBInk daemon
+kill_fbink() {
+    if fbink_is_up
+    then
+        kill -TERM $fbink_pid
+        debug_log && do_debug_log "-- killed FBInk daemon -- ${fbink_pid}"
+    fi
+}
+
 # (re-)start the FBInk daemon (but only if we need to swap between OT/bitmap fonts)
 fbink_check() {
     if [ -f "$cfg_truetype" ]
@@ -348,10 +357,7 @@ fbink_check() {
             return
         fi
 
-        if kill -0 $fbink_pid
-        then
-            kill -TERM $fbink_pid
-        fi
+        kill_fbink
 
         # variants available?
         truetype="regular=$cfg_truetype"
@@ -371,17 +377,14 @@ fbink_check() {
             fbink_with_truetype=-1
         fi
 
-        debug_log && do_debug_log "-- launched truetype FBInk daemon --"
+        debug_log && do_debug_log "-- launched truetype FBInk daemon -- ${fbink_pid}"
     else
         if [ "$fbink_with_truetype" -eq "0" ]
         then
             return
         fi
 
-        if kill -0 $fbink_pid
-        then
-            kill -TERM $fbink_pid
-        fi
+        kill_fbink
 
         fbink_pid="$(fbink --daemon 1 %MINICLOCK% \
                     -x "$cfg_column" -X "$cfg_offset_x" -y "$cfg_row" -Y "$cfg_offset_y" \
@@ -396,7 +399,7 @@ fbink_check() {
             fbink_with_truetype=-1
         fi
 
-        debug_log && do_debug_log "-- launched bitmap FBInk daemon --"
+        debug_log && do_debug_log "-- launched bitmap FBInk daemon -- ${fbink_pid}"
     fi
 }
 
@@ -584,6 +587,6 @@ main() {
 }
 
 # Kill the FBInk daemon on exit
-trap 'kill -TERM $fbink_pid' EXIT TERM INT QUIT
+trap 'kill_fbink' EXIT TERM INT QUIT
 
 main
