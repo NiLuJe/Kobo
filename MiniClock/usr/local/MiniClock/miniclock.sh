@@ -65,6 +65,8 @@ load_config() {
     cfg_cooldown=$(config cooldown '5 30')
 
     cfg_format=$(config format '%a %b %d %H:%M')
+    cfg_column=$(config column '0')
+    cfg_row=$(config row '0')
     cfg_offset_x=$(config offset_x '0')
     cfg_offset_y=$(config offset_y '0')
     cfg_font=$(config font 'IBM')
@@ -342,7 +344,8 @@ update() {
     fi
 
     # fbink with builtin font
-    fbink -X "$cfg_offset_x" -Y "$cfg_offset_y" -F "$cfg_font" -S "$cfg_size" \
+    fbink -x "$cfg_column" -X "$cfg_offset_x" -y "$cfg_row" -Y "$cfg_offset_y" \
+          -F "$cfg_font" -S "$cfg_size" \
           -C "$cfg_fg_color" -B "$cfg_bg_color" \
           $nightmode \
           "$(my_date +"$cfg_format")"
