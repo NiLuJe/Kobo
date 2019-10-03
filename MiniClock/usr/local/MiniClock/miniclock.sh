@@ -328,6 +328,8 @@ fbink_check() {
                     -C "$cfg_truetype_fg" -B "$cfg_truetype_bg" \
                     $nightmode)"
         fbink_with_truetype=1
+
+        debug_log && do_debug_log "-- launched truetype FBInk daemon --"
     else
         if [ "$fbink_with_truetype" -eq "0" ]
         then
@@ -345,6 +347,8 @@ fbink_check() {
                     -C "$cfg_fg_color" -B "$cfg_bg_color" \
                     $nightmode)"
         fbink_with_truetype=0
+
+        debug_log && do_debug_log "-- launched bitmap FBInk daemon --"
     fi
 }
 
