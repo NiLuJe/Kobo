@@ -215,6 +215,7 @@ load_config() {
     # Let's try with the final pixel (bottom right corner of the screen)
     pixel_bytes="$((BPP>>3))"
     pixel_address="$((((viewWidth - 1) * pixel_bytes) + ((viewHeight + (viewVertOrigin - viewVertOffset) - 1) * lineLength)))"
+    pixel_value=$'\x11\x11\x11\xff'
 
     # Ensure we restart the FBInk daemon on config (re-)load
     fbink_with_truetype=-1
@@ -574,14 +575,14 @@ main() {
                     # If the pixel changed color, we're good to go!
                     pixel="$(dd if=/dev/fb0 skip=${pixel_address} count=${pixel_bytes} bs=1 2>/dev/null)"
                     sleep $i
-                    if [ "${pixel}" = $'\x11\x11\x11\xff' ]
+                    if [ "${pixel}" = ${pixel_value} ]
                     then
                         do_debug_log "-- sentinel pixel hasn't been updated, delay -- $i"
                         continue
                     else
                         update
                         # End by painting our sentinel pixel a specific color (neither black nor white)
-                        echo -n $'\x11\x11\x11\xff' | dd of=/dev/fb0 seek=${pixel_address} count=${pixel_bytes} bs=1 2>/dev/null
+                        echo -n ${pixel_value} | dd of=/dev/fb0 seek=${pixel_address} count=${pixel_bytes} bs=1 2>/dev/null
                         break
                     fi
                 done
