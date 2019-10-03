@@ -4,6 +4,8 @@ export LD_LIBRARY_PATH="/usr/local/MiniClock:$LD_LIBRARY_PATH"
 PATH="/usr/local/MiniClock:$PATH"
 BASE="/mnt/onboard/.addons/miniclock"
 CONFIGFILE="$BASE/miniclock.cfg"
+# Use a custom FBInk pipe
+export FBINK_NAMED_PIPE="/tmp/MiniClock/fbink-fifo"
 
 # udev kills slow scripts
 udev_workarounds() {
@@ -195,6 +197,10 @@ load_config() {
         cfg_whitelist="$cfg_whitelist $1:$2"
     done
     debug_log && do_debug_log "-- cfg_whitelist (str2int) = '$cfg_whitelist' --"
+
+    # Ensure we restart the FBInk daemon on config (re-)load
+    fbink_with_truetype=-1
+    fbink_check
 }
 
 # string replace str a b
@@ -297,6 +303,51 @@ frontlight_check() {
     fi
 }
 
+# (re-)start the FBInk daemon (but only if we need to swap between OT/bitmap fonts)
+fbink_check() {
+    if [ -f "$cfg_truetype" ]
+    then
+        if [ "$fbink_with_truetype" -eq "1" ]
+        then
+            return
+        fi
+
+        if kill -0 $fbink_pid
+        then
+            kill -TERM $fbink_pid
+        fi
+
+        # variants available?
+        truetype="regular=$cfg_truetype"
+        [ -f "$cfg_truetype_bold" ] && truetype="$truetype,bold=$cfg_truetype_bold"
+        [ -f "$cfg_truetype_italic" ] && truetype="$truetype,italic=$cfg_truetype_italic"
+        [ -f "$cfg_truetype_bolditalic" ] && truetype="$truetype,bolditalic=$cfg_truetype_bolditalic"
+
+        fbink_pid="$(fbink --daemon 1 \
+                    --truetype "$truetype",size="$cfg_truetype_size",px="$cfg_truetype_px",top="$cfg_truetype_y",bottom=0,left="$cfg_truetype_x",right=0,format \
+                    -C "$cfg_truetype_fg" -B "$cfg_truetype_bg" \
+                    $nightmode)"
+        fbink_with_truetype=1
+    else
+        if [ "$fbink_with_truetype" -eq "0" ]
+        then
+            return
+        fi
+
+        if kill -0 $fbink_pid
+        then
+            kill -TERM $fbink_pid
+        fi
+
+        fbink_pid="$(fbink --daemon 1 \
+                    -x "$cfg_column" -X "$cfg_offset_x" -y "$cfg_row" -Y "$cfg_offset_y" \
+                    -F "$cfg_font" -S "$cfg_size" \
+                    -C "$cfg_fg_color" -B "$cfg_bg_color" \
+                    $nightmode)"
+        fbink_with_truetype=0
+    fi
+}
+
 update() {
     sleep 0.1
 
@@ -308,27 +359,10 @@ update() {
 
     if [ -f "$cfg_truetype" ]
     then
-        # variants available?
-        truetype="regular=$cfg_truetype"
-        [ -f "$cfg_truetype_bold" ] && truetype="$truetype,bold=$cfg_truetype_bold"
-        [ -f "$cfg_truetype_italic" ] && truetype="$truetype,italic=$cfg_truetype_italic"
-        [ -f "$cfg_truetype_bolditalic" ] && truetype="$truetype,bolditalic=$cfg_truetype_bolditalic"
-
-        # fbink with truetype font
-        fbink --truetype "$truetype",size="$cfg_truetype_size",px="$cfg_truetype_px",top="$cfg_truetype_y",bottom=0,left="$cfg_truetype_x",right=0,format \
-              -C "$cfg_truetype_fg" -B "$cfg_truetype_bg" \
-              $nightmode \
-              "$(my_tt_date +"$cfg_truetype_format")"
-
-        [ $? -eq 0 ] && exit # return
+        echo -n "$(my_tt_date +"$cfg_truetype_format")" > "$FBINK_NAMED_PIPE"
+    else
+        echo -n "$(my_date +"$cfg_format")" > "$FBINK_NAMED_PIPE"
     fi
-
-    # fbink with builtin font
-    fbink -x "$cfg_column" -X "$cfg_offset_x" -y "$cfg_row" -Y "$cfg_offset_y" \
-          -F "$cfg_font" -S "$cfg_size" \
-          -C "$cfg_fg_color" -B "$cfg_bg_color" \
-          $nightmode \
-          "$(my_date +"$cfg_format")"
 
     ) # subshell end / unblock
 }
@@ -450,6 +484,7 @@ main() {
             load_config
             nightmode_check
             frontlight_check
+            fbink_check
             check_event $(devinputeventdump $cfg_input_devices)
         do
             # whitelisted event
@@ -494,6 +529,8 @@ main() {
             debug_log && do_debug_log "-- cooldown end,   $(date) --"
         fi
     done
+
+    kill -TERM $fbink_pid
 }
 
 main
