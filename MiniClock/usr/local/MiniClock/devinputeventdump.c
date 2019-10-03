@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
     struct pollfd fds[2] = { 0 };
     struct input_event events[32] = { 0 };
     int h = 0;
-    for(int i=1,h=0; i < argc; i++,h++) {
+    for(int i=1; i < argc; i++,h++) {
         fds[h].events = POLLIN;
         fds[h].fd = open(argv[i], O_RDONLY);
         if(fds[h].fd < 0) {
@@ -36,7 +36,8 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Poll error %d, %s...\n", errno, strerror(errno));
         exit(1);
     }
-    for(int i=1,h=0; i < argc; i++,h++) {
+    h = 0;
+    for(int i=1; i < argc; i++,h++) {
         if(fds[h].revents & POLLIN) {
             usleep(50000);
             ssize_t b = read(fds[h].fd, events, sizeof(events));
@@ -51,8 +52,8 @@ int main(int argc, char *argv[]) {
             }
 
             h = b / sizeof(*events);
-            for(int i=0; i<h; i++) {
-                printf("%ld %ld %d %d %d\n", events[i].time.tv_sec, events[i].time.tv_usec, events[i].type, events[i].code, events[i].value);
+            for(int j=0; j<h; j++) {
+                printf("%ld %ld %d %d %d\n", events[j].time.tv_sec, events[j].time.tv_usec, events[j].type, events[j].code, events[j].value);
             }
             exit(0);
         }
