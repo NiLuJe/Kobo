@@ -241,7 +241,7 @@ shenaniganize_date() {
     do
         case "$datestr" in
             *{frontlight}*)
-                datestr=$(str_replace "$datestr" "{fontlight}" "$frontlight")
+                datestr=$(str_replace "$datestr" "{frontlight}" "$frontlight")
             ;;
             *{battery}*)
                 battery=$(cat "$cfg_battery_source")
