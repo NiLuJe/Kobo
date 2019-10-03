@@ -34,18 +34,18 @@ int main(int argc, char *argv[]) {
     for(i=1,h=0; i < argc; i++,h++) {
         if(fds[h].revents & POLLIN) {
             usleep(50000);
-            h = read(fds[h].fd, events, 32*sizeof(struct input_event));
+            h = read(fds[h].fd, events, sizeof(events));
 
             if(h < 0) {
                 fprintf(stderr, "Read error %d, %s...\n", errno, strerror(errno));
                 exit(10);
             }
 
-            if(h < sizeof(struct input_event)) {
-                fprintf(stderr, "Short read %d bytes, expected %d...\n", h, sizeof(struct input_event));
+            if(h < sizeof(*events)) {
+                fprintf(stderr, "Short read %d bytes, expected %zu...\n", h, sizeof(*events));
             }
 
-            h = h / sizeof(struct input_event);
+            h = h / sizeof(*events);
             for(i=0; i<h; i++) {
                 printf("%ld %ld %d %d %d\n", events[i].time.tv_sec, events[i].time.tv_usec, events[i].type, events[i].code, events[i].value);
             }
