@@ -303,6 +303,42 @@ frontlight_check() {
     fi
 }
 
+## Check if arg is an int
+is_integer()
+{
+    # Cheap trick ;)
+    [ "${1}" -eq "${1}" ] 2>/dev/null
+    return $?
+}
+
+# Check if the FBInk daemon is up
+fbink_is_up() {
+    if [ "${fbink_pid}" -eq '' ]
+    then
+        # Empty
+        return 1
+    fi
+
+    if ! is_integer "${fbink_pid}"
+    then
+        # Not a PID?!
+        return 1
+    fi
+
+    if kill -0 $fbink_pid
+    then
+        # It's alive
+        if grep -q '%MINICLOCK%' /proc/${fbink_pid}/cmdline
+        then
+            # It's ours
+            return 0
+        fi
+    fi
+
+    # Meep!
+    return 1
+}
+
 # (re-)start the FBInk daemon (but only if we need to swap between OT/bitmap fonts)
 fbink_check() {
     if [ -f "$cfg_truetype" ]
@@ -323,7 +359,7 @@ fbink_check() {
         [ -f "$cfg_truetype_italic" ] && truetype="$truetype,italic=$cfg_truetype_italic"
         [ -f "$cfg_truetype_bolditalic" ] && truetype="$truetype,bolditalic=$cfg_truetype_bolditalic"
 
-        fbink_pid="$(fbink --daemon 1 \
+        fbink_pid="$(fbink --daemon 1 %MINICLOCK% \
                     --truetype "$truetype",size="$cfg_truetype_size",px="$cfg_truetype_px",top="$cfg_truetype_y",bottom=0,left="$cfg_truetype_x",right=0,format \
                     -C "$cfg_truetype_fg" -B "$cfg_truetype_bg" \
                     $nightmode)"
@@ -347,7 +383,7 @@ fbink_check() {
             kill -TERM $fbink_pid
         fi
 
-        fbink_pid="$(fbink --daemon 1 \
+        fbink_pid="$(fbink --daemon 1 %MINICLOCK% \
                     -x "$cfg_column" -X "$cfg_offset_x" -y "$cfg_row" -Y "$cfg_offset_y" \
                     -F "$cfg_font" -S "$cfg_size" \
                     -C "$cfg_fg_color" -B "$cfg_bg_color" \
