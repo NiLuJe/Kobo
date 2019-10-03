@@ -9,7 +9,12 @@
 #include <string.h>
 
 int main(int argc, char *argv[]) {
-    struct pollfd fds[argc - 1U];
+    if(argc - 1U > 2) {
+        fprintf(stderr, "Can't poll more than 2 input devices!\n");
+        exit(3);
+    }
+
+    struct pollfd fds[2] = { 0 };
     struct input_event events[32] = { 0 };
     int h, i;
     for(i=1,h=0; i < argc; i++,h++) {
