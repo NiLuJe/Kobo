@@ -30,7 +30,7 @@ udev_workarounds() {
 
 # nickel stuff
 wait_for_nickel() {
-    while ! pidof nickel || ! grep /mnt/onboard /proc/mounts
+    while ! pidof nickel >/dev/null 2>&1 || ! grep -q /mnt/onboard /proc/mounts
     do
         sleep 5
     done
