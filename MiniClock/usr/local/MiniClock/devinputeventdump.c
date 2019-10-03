@@ -9,8 +9,8 @@
 #include <string.h>
 
 int main(int argc, char *argv[]) {
-    struct pollfd *fds = malloc((argc-1)*sizeof(struct pollfd));
-    struct input_event *events = malloc(32*sizeof(struct input_event));
+    struct pollfd fds[argc - 1U];
+    struct input_event events[32] = { 0 };
     int h, i;
     for(i=1,h=0; i < argc; i++,h++) {
         fds[h].events = POLLIN;
