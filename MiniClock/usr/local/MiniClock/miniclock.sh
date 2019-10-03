@@ -7,6 +7,15 @@ CONFIGFILE="$BASE/miniclock.cfg"
 # Use a custom FBInk pipe
 export FBINK_NAMED_PIPE="/tmp/MiniClock/fbink-fifo"
 
+# Kill all the things on exit
+trap die 0 1 2 3 15
+die() {
+    kill_fbink
+    pkill -TERM devinputeventdump
+    #rm -rf /tmp/MiniClock
+    exit 1
+}
+
 # udev kills slow scripts
 udev_workarounds() {
     if [ "$SETSID" != "1" ]
@@ -313,7 +322,7 @@ is_integer()
 
 # Check if the FBInk daemon is up
 fbink_is_up() {
-    if [ "${fbink_pid}" -eq '' ]
+    if [ "${fbink_pid}" = '' ]
     then
         # Empty
         return 1
@@ -585,8 +594,5 @@ main() {
         fi
     done
 }
-
-# Kill the FBInk daemon on exit
-trap 'kill_fbink' EXIT TERM INT QUIT
 
 main
