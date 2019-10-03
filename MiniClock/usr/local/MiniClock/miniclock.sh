@@ -112,8 +112,6 @@ load_config() {
     cfg_battery_max=$(config battery_max '50')
     cfg_battery_source=$(config battery_source '/sys/devices/platform/pmic_battery.1/power_supply/mc13892_bat/capacity')
 
-    cfg_frontlight_check=$(config check_frontlight '1')
-
     cfg_days=$(config days '')
     cfg_months=$(config months '')
 
@@ -172,10 +170,12 @@ load_config() {
         ;;
     esac
 
-    # debug handling
+    # Auto-detect whether we need to bother with visual debug, or reading the frontlight level
+    cfg_causality=0
+    cfg_frontlight_check=0
     case "$cfg_format $cfg_truetype_format" in
-        *{debug}*) cfg_causality=1 ;;
-        *)         cfg_causality=0 ;;
+        *{debug}*)      cfg_causality=1 ;;
+        *{frontlight}*) cfg_frontlight_check=1 ;;
     esac
 
     do_debug_log() {
