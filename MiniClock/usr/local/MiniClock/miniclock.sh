@@ -210,6 +210,12 @@ load_config() {
     done
     debug_log && do_debug_log "-- cfg_whitelist (str2int) = '$cfg_whitelist' --"
 
+    # We'll need a mostly up to date fb state for the pixel watching...
+    eval $(fbink -e)
+    # Let's try with the final pixel (bottom right corner of the screen)
+    pixel_address="$((((viewWidth - 1) * (BPP>>3)) + ((viewHeight + (viewVertOrigin - viewVertOffset) - 1) * lineLength)))"
+    pixel_bytes="$((BPP>>3))"
+
     # Ensure we restart the FBInk daemon on config (re-)load
     fbink_with_truetype=-1
     fbink_check
@@ -562,11 +568,23 @@ main() {
             pkill -P $$ && debug_log && do_debug_log "-- killed previous update task --"
             debug_log && do_debug_log "-- cfg_delay = '$cfg_delay' --"
             (
+                # Start by painting our sentinel pixel a specific color (neither black nor white)
+                echo -n $'\x11\x11\x11\xff' | dd of=/dev/fb0 seek=${pixel_address} count=${pixel_bytes} bs=1 2>/dev/null
+
                 # runs in background so next event can be listened to already
                 for i in $cfg_delay
                 do
                     sleep $i
-                    update
+                    # If the pixel changed color, we're good to go!
+                    pixel="$(dd if=/dev/fb0 skip=${pixel_address} count=${pixel_bytes} bs=1 2>/dev/null)"
+                    if [ "${pixel}" = $'\x11\x11\x11\xff' ]
+                    then
+                        do_debug_log "-- sentinel pixel hasn't been updated, delay -- $i"
+                        continue
+                    else
+                        update
+                        break
+                    fi
                 done
             ) &
         done # end update loop
@@ -583,6 +601,7 @@ main() {
             if [ "$cfg_causality" = 1 ]
             then
                 # update only to display cooldown {debug}
+                # No fancy pixel watching when debugging ;).
                 causality="cooldown $cfg_cooldown"
                 (
                     for i in $cfg_delay
