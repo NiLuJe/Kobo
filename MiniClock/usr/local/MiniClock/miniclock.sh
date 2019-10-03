@@ -212,9 +212,9 @@ load_config() {
 
     # We'll need a mostly up to date fb state for the pixel watching...
     eval $(fbink -e)
-    # Let's settle for a pixel near the top-left corner
+    # Let's try with the final pixel (bottom right corner of the screen)
     pixel_bytes="$((BPP>>3))"
-    pixel_address="$(((50 * pixel_bytes) + (((viewVertOrigin - viewVertOffset) + 20) * lineLength)))"
+    pixel_address="$((((viewWidth - 1) * pixel_bytes) + ((viewHeight + (viewVertOrigin - viewVertOffset) - 1) * lineLength)))"
 
     # Ensure we restart the FBInk daemon on config (re-)load
     fbink_with_truetype=-1
