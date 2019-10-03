@@ -510,7 +510,7 @@ check_event() {
                 # successful
                 [ "$cfg_causality" = 1 ] && causality="$(input_event_int2str $3 $4 | tr ' ' ':') $5" &&
                     debug_log && do_debug_log "-- whitelist match -- $causality" ||
-                    debug_log && do_debug_log "-- whitelist match -- $(input_devent_int2str $3 $4 | tr ' ' ':')"
+                    debug_log && do_debug_log "-- whitelist match -- $(input_event_int2str $3 $4 | tr ' ' ':')"
                 return 0
             fi
         done
