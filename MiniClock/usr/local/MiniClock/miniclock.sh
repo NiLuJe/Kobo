@@ -86,6 +86,7 @@ load_config() {
     cfg_truetype_bolditalic=$(config truetype_bolditalic '')
     cfg_truetype_padding=$(config truetype_padding '1')
 
+    cfg_nightmode_check=$(config check_nightmode '1')
     cfg_nightmode_file=$(config nightmode_file '/mnt/onboard/.kobo/nightmode.ini')
     cfg_nightmode_key=$(config nightmode_key 'invertActive')
     cfg_nightmode_value=$(config nightmode_value 'yes')
@@ -93,6 +94,8 @@ load_config() {
     cfg_battery_min=$(config battery_min '0')
     cfg_battery_max=$(config battery_max '50')
     cfg_battery_source=$(config battery_source '/sys/devices/platform/pmic_battery.1/power_supply/mc13892_bat/capacity')
+
+    cfg_frontlight_check=$(config check_frontlight '1')
 
     cfg_days=$(config days '')
     cfg_months=$(config months '')
@@ -268,6 +271,11 @@ shenaniganize_date() {
 
 # nightmode check
 nightmode_check() {
+    if [ "$cfg_nightmode_check" -ne "1" ]
+    then
+        return
+    fi
+
     [ ! -e /tmp/MiniClock/nightmode ] && touch /tmp/MiniClock/nightmode
 
     if [ "$cfg_nightmode_file" -nt /tmp/MiniClock/nightmode -o "$cfg_nightmode_file" -ot /tmp/MiniClock/nightmode ]
@@ -289,6 +297,11 @@ nightmode_check() {
 
 # frontlight check
 frontlight_check() {
+    if [ "$cfg_frontlight_check" -ne "1" ]
+    then
+        return
+    fi
+
     [ ! -e /tmp/MiniClock/frontlight ] && touch /tmp/MiniClock/frontlight
 
     if [ "/mnt/onboard/.kobo/Kobo/Kobo eReader.conf" -nt /tmp/MiniClock/frontlight -o "/mnt/onboard/.kobo/Kobo/Kobo eReader.conf" -ot /tmp/MiniClock/frontlight ]
