@@ -62,7 +62,7 @@ uninstall_check() {
 
 # loads a config file but only if it was never loaded or changed since last load
 load_config() {
-    [ -z "${config_loaded:-}" ] || grep /mnt/onboard /proc/mounts || return 1 # not mounted
+    [ -z "${config_loaded:-}" ] || grep -q /mnt/onboard /proc/mounts || return 1 # not mounted
     [ -z "${config_loaded:-}" ] || [ "$CONFIGFILE" -nt /tmp/MiniClock -o "$CONFIGFILE" -ot /tmp/MiniClock ] || return 1 # not changed
     config_loaded=1
     touch -r "$CONFIGFILE" /tmp/MiniClock # remember timestamp
@@ -549,7 +549,7 @@ main() {
             nightmode_check
             frontlight_check
             fbink_check
-            check_event $(devinputeventdump $cfg_input_devices)
+            check_event $(devinputeventdump $cfg_input_devices 2>/dev/null)
         do
             # whitelisted event
             negative=0
