@@ -229,6 +229,9 @@ shenaniganize_date() {
     for i in $(seq 100) # terminate on invalid strings
     do
         case "$datestr" in
+            *{frontlight}*)
+                datestr=$(str_replace "$datestr" "{fontlight}" "$frontlight")
+            ;;
             *{battery}*)
                 battery=$(cat "$cfg_battery_source")
                 if [ $? -eq 0 -a "$battery" -ge "$cfg_battery_min" -a "$battery" -le "$cfg_battery_max" ]
@@ -281,6 +284,20 @@ nightmode_check() {
 
         # remember timestamp so we don't have to do this every time
         touch -r "$cfg_nightmode_file" /tmp/MiniClock/nightmode
+    fi
+}
+
+# frontlight check
+frontlight_check() {
+    [ ! -e /tmp/MiniClock/frontlight ] && touch /tmp/MiniClock/frontlight
+
+    if [ "/mnt/onboard/.kobo/Kobo/Kobo eReader.conf" -nt /tmp/MiniClock/frontlight -o "/mnt/onboard/.kobo/Kobo/Kobo eReader.conf" -ot /tmp/MiniClock/frontlight ]
+    then
+        # nightmode state might have changed
+        frontlight=$(CONFIGFILE="/mnt/onboard/.kobo/Kobo/Kobo eReader.conf" config "FrontLightLevel" "??")
+
+        # remember timestamp so we don't have to do this every time
+        touch -r "/mnt/onboard/.kobo/Kobo/Kobo eReader.conf" /tmp/MiniClock/frontlight
     fi
 }
 
@@ -435,6 +452,7 @@ main() {
             sleep 0.2 # ratelimit
             load_config
             nightmode_check
+            frontlight_check
             check_event $(devinputeventdump $cfg_input_devices)
         do
             # whitelisted event
