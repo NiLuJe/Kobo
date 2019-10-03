@@ -182,26 +182,6 @@ load_config() {
     debug_log && do_debug_log "-- config file read $(date) --"
     debug_log && do_debug_log "-- cfg_debug = '$cfg_debug', format {debug} = '$cfg_causality' --"
 
-    # patch handling
-    if [ ! -e /tmp/MiniClock/patch -a "$cfg_input_devices" != "${cfg_input_devices/event0/}" ]
-    then
-        touch /tmp/MiniClock/patch
-
-        libnickel=$(realpath /usr/local/Kobo/libnickel.so)
-        if strings "$libnickel" | grep -F '/dev/input/event0:keymap=keys/device.qmap:grab=1'
-        then
-            sed -i -e 's@/dev/input/event0:keymap=keys/device.qmap:grab=1@/dev/input/event0:keymap=keys/device.qmap:grab=0@' "$libnickel"
-            touch /tmp/MiniClock/reboot
-            debug_log && do_debug_log "-- patched libnickel, require reboot --"
-            for i in $(seq 60)
-            do
-                # showing this notice is not guaranteed in the main loop, so do it here
-                fbink "MiniClock: Please Reboot for Button Patch"
-                sleep 4
-            done
-        fi
-    fi
-
     # whitelist filtering (string to number)
     debug_log && do_debug_log "-- cfg_whitelist = '$cfg_whitelist' --"
     set -- $cfg_whitelist
