@@ -369,7 +369,7 @@ fbink_check() {
                     --truetype "$truetype",size="$cfg_truetype_size",px="$cfg_truetype_px",top="$cfg_truetype_y",bottom=0,left="$cfg_truetype_x",right=0,format \
                     -C "$cfg_truetype_fg" -B "$cfg_truetype_bg" \
                     $nightmode)"
-        if [ $? -eq 0 ]
+        if [ $? -eq 0 ] && fbink_is_up
         then
             fbink_with_truetype=1
         else
@@ -391,7 +391,7 @@ fbink_check() {
                     -F "$cfg_font" -S "$cfg_size" \
                     -C "$cfg_fg_color" -B "$cfg_bg_color" \
                     $nightmode)"
-        if [ $? -eq 0 ]
+        if [ $? -eq 0 ] && fbink_is_up
         then
             fbink_with_truetype=0
         else
