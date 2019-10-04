@@ -217,9 +217,8 @@ load_config() {
     pixel_address="$((((viewWidth - 1) * pixel_bytes) + ((viewHeight + (viewVertOrigin - viewVertOffset) - 1) * lineLength)))"
     pixel_value=$'\x11\x11\x11\xff'
 
-    # Ensure we restart the FBInk daemon on config (re-)load
+    # Ensure we'll restart the FBInk daemon on config (re-)load
     fbink_with_truetype=-1
-    fbink_check
 }
 
 # string replace str a b
