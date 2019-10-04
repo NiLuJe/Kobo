@@ -300,6 +300,14 @@ nightmode_check() {
 
         # remember timestamp so we don't have to do this every time
         touch -r "$cfg_nightmode_file" /tmp/MiniClock/nightmode
+
+        # If nightmode state actually changed, we'll need to restart the FBInk daemon
+        if [ "$nightmode" != "$prev_nightmode" ]
+        then
+            debug_log && do_debug_log "-- nightmode state switch -- ${prev_nightmode} -> ${nightmode}"
+            fbink_with_truetype=-1
+        fi
+        prev_nightmode="$nightmode"
     fi
 }
 
