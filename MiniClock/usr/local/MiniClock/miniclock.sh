@@ -20,6 +20,7 @@ die() {
 udev_workarounds() {
     if [ "$SETSID" != "1" ]
     then
+        renice 0 -p $$
         SETSID=1 setsid "$0" "$@" &
         exit
     fi
