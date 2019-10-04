@@ -314,7 +314,7 @@ frontlight_check() {
 
     if [ "/mnt/onboard/.kobo/Kobo/Kobo eReader.conf" -nt /tmp/MiniClock/frontlight -o "/mnt/onboard/.kobo/Kobo/Kobo eReader.conf" -ot /tmp/MiniClock/frontlight ]
     then
-        # nightmode state might have changed
+        # frontlight state might have changed
         frontlight=$(CONFIGFILE="/mnt/onboard/.kobo/Kobo/Kobo eReader.conf" config "FrontLightLevel" "??")
 
         # remember timestamp so we don't have to do this every time
