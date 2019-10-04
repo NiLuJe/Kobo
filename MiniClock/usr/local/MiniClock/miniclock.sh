@@ -88,7 +88,6 @@ load_config() {
     cfg_size=$(config size '0')
     cfg_fg_color=$(config fg_color 'BLACK')
     cfg_bg_color=$(config bg_color 'WHITE')
-    cfg_update=$(config update '60')
     cfg_delay=$(config delay '1 1 1')
 
     cfg_truetype=$(config truetype '')
@@ -224,8 +223,7 @@ load_config() {
 
 # string replace str a b
 str_replace() {
-    local pre
-    local post
+    local pre post
     pre=${1%%"$2"*}
     post=${1#*"$2"}
     echo "$pre$3$post"
@@ -234,7 +232,7 @@ str_replace() {
 # shenaniganize date (runs in a subshell)
 shenaniganize_date() {
     local datestr=$(date "$@")
-    local pre post number
+    local pre post
 
     # shenaniganize all the stuff
     for i in $(seq 100) # terminate on invalid strings
