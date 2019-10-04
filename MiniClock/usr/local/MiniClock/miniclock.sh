@@ -579,10 +579,16 @@ main() {
                 do
                     # If the pixel changed color, we're good to go!
                     pixel="$(dd if=/dev/fb0 skip=${pixel_address} count=${pixel_bytes} bs=1 2>/dev/null)"
-                    sleep $i
+                    # NOTE: Only sleeping in the "delay" branch allows us better reactivity,
+                    #       at the expense of potentially being overriden by a button highlight.
+                    #       f.g., if you print to the bottom right corner, that's smack inside the Library's next page button,
+                    #       so we risk printing *before* the highlight disappears,
+                    #       and the highlight disappearing will in practice "erase" us,
+                    #       and since it's no longer tied to an input event, we won't reprint.
                     if [ "${pixel}" = ${pixel_value} ]
                     then
                         do_debug_log "-- sentinel pixel hasn't been updated, delay -- $i"
+                        sleep $i
                         continue
                     else
                         update
