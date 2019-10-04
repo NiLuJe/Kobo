@@ -583,18 +583,23 @@ main() {
                 # runs in background so next event can be listened to already
                 for i in $cfg_delay
                 do
+                    # See the lengthy note below for why we sleep first...
+                    # TL;DR: Because we can't have nice things :(.
+                    sleep $i
                     # If the pixel changed color, we're good to go!
                     pixel="$(dd if=/dev/fb0 skip=${pixel_address} count=${pixel_bytes} bs=1 2>/dev/null)"
-                    # NOTE: Only sleeping in the "delay" branch allows us better reactivity,
+                    # NOTE: Only sleeping in the "delay" branch would allow us better reactivity,
                     #       at the expense of potentially being overriden by a button highlight.
                     #       f.g., if you print to the bottom right corner, that's smack inside the Library's next page button,
                     #       so we risk printing *before* the highlight disappears,
                     #       and the highlight disappearing will in practice "erase" us,
                     #       and since it's no longer tied to an input event, we won't reprint.
+                    # NOTE: Unfortunately, that's not the only potential issue: the crappy performance of the ePub reader
+                    #       also means that we'd almost always print before the pageturn.
+                    #       And my guess is there's a double-blit involved, because we get erased by the page-turn :/.
                     if [ "${pixel}" = ${pixel_value} ]
                     then
                         do_debug_log "-- sentinel pixel hasn't been updated, delay -- $i"
-                        sleep $i
                         continue
                     else
                         update
