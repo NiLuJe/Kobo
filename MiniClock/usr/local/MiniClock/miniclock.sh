@@ -433,6 +433,9 @@ update() {
 
     cd "$BASE" # blocks USB lazy-umount and cd / doesn't work
 
+    # NOTE: We're technically using the config's *previous* state here, which means that, when swapping between bitmap/truetype,
+    #       the first bitmap update will be sent a truetype string, and vice-versa.
+    #       This is only potentially problematic if padding is enabled, as the extra width needed *may* affect the final layout...
     if [ -f "$cfg_truetype" ]
     then
         echo -n "$(my_tt_date +"$cfg_truetype_format")" > "$FBINK_NAMED_PIPE"
