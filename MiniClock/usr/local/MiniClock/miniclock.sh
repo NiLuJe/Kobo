@@ -369,6 +369,8 @@ kill_fbink() {
 
 # (re-)start the FBInk daemon (but only if we need to swap between OT/bitmap fonts)
 fbink_check() {
+    # NOTE: Technically, we only need to be able to read the fonts at daemon startup.
+    #       With a bit of trickery, we could probably maange to keep a previous truetype daemon up during USBMS sessions...
     if [ -f "$cfg_truetype" ]
     then
         if [ "$fbink_with_truetype" -eq "1" ]
