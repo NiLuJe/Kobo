@@ -596,18 +596,22 @@ check_event() {
                 return 0
             fi
         done
-        for item in $cfg_graylist
-        do
-            if [ "$item" = "$3:$4" ]
-            then
-                # successful
-                [ "$cfg_causality" = 1 ] && causality="$(input_event_int2str $3 $4 | tr ' ' ':') $5" &&
-                    debug_log && do_debug_log "-- graylist match -- $causality" ||
-                    debug_log && do_debug_log "-- graylist match -- $(input_event_int2str $3 $4 | tr ' ' ':')"
-                whitelisted=0
-                return 0
-            fi
-        done
+        # If the graylist is empty, don't even bother
+        if [ "$cfg_graylist" != "" ]
+        then
+            for item in $cfg_graylist
+            do
+                if [ "$item" = "$3:$4" ]
+                then
+                    # successful
+                    [ "$cfg_causality" = 1 ] && causality="$(input_event_int2str $3 $4 | tr ' ' ':') $5" &&
+                        debug_log && do_debug_log "-- graylist match -- $causality" ||
+                        debug_log && do_debug_log "-- graylist match -- $(input_event_int2str $3 $4 | tr ' ' ':')"
+                    whitelisted=0
+                    return 0
+                fi
+            done
+        fi
         shift 5
     done
 
