@@ -76,7 +76,8 @@ load_config() {
 
     cfg_input_devices=$(printf "/dev/input/event%s " $(config input_devices '1'))
 
-    cfg_whitelist=$(config whitelist 'ABS:MT_POSITION_X ABS:MT_POSITION_Y KEY:F23 KEY:F24 KEY:POWER')
+    cfg_whitelist=$(config whitelist 'ABS:MT_POSITION_X ABS:MT_POSITION_Y KEY:F23 KEY:F24 KEY:POWER ABS:X ABS:Y')
+    cfg_graylist=$(config graylist 'MSC:RAW')
     cfg_cooldown=$(config cooldown '5 30')
 
     cfg_format=$(config format '%a %b %d %H:%M')
@@ -224,6 +225,20 @@ load_config() {
         cfg_whitelist="$cfg_whitelist $1:$2"
     done
     debug_log && do_debug_log "-- cfg_whitelist (str2int) = '$cfg_whitelist' --"
+
+    # graylist filtering (string to number)
+    debug_log && do_debug_log "-- cfg_graylist = '$cfg_graylist' --"
+    set -- $cfg_graylist
+    cfg_graylist=""
+    for item in $@
+    do
+        set -- ${item//:/ }
+        [ $# != 2 ] && continue
+        set -- $(input_event_str2int $1 $2)
+        [ $# != 2 ] && continue
+        cfg_graylist="$cfg_graylist $1:$2"
+    done
+    debug_log && do_debug_log "-- cfg_graylist (str2int) = '$cfg_graylist' --"
 
     # We'll need a mostly up to date fb state for the pixel watching...
     eval $(fbink -e)
@@ -577,6 +592,19 @@ check_event() {
                 [ "$cfg_causality" = 1 ] && causality="$(input_event_int2str $3 $4 | tr ' ' ':') $5" &&
                     debug_log && do_debug_log "-- whitelist match -- $causality" ||
                     debug_log && do_debug_log "-- whitelist match -- $(input_event_int2str $3 $4 | tr ' ' ':')"
+                whitelisted=1
+                return 0
+            fi
+        done
+        for item in $cfg_graylist
+        do
+            if [ "$item" = "$3:$4" ]
+            then
+                # successful
+                [ "$cfg_causality" = 1 ] && causality="$(input_event_int2str $3 $4 | tr ' ' ':') $5" &&
+                    debug_log && do_debug_log "-- graylist match -- $causality" ||
+                    debug_log && do_debug_log "-- graylist match -- $(input_event_int2str $3 $4 | tr ' ' ':')"
+                whitelisted=0
                 return 0
             fi
         done
@@ -617,8 +645,14 @@ main() {
             fbink_check
             check_event $(devinputeventdump $cfg_input_devices 2>/dev/null)
         do
-            # whitelisted event
+            # whitelisted/graylisted event
             negative=0
+            # abort early if it was simply a graylist match
+            if [ "$whitelisted" -ne "1" ]
+            then
+                continue
+            fi
+
             # kill previous update if unfinished
             pkill -P $$ && debug_log && do_debug_log "-- killed previous update task --"
             debug_log && do_debug_log "-- cfg_delay = '$cfg_delay' --"
