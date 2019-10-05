@@ -13,7 +13,7 @@ die() {
     kill_fbink
     pkill -TERM devinputeventdump
     #rm -rf /tmp/MiniClock
-    exit 1
+    exit 0
 }
 
 # udev kills slow scripts
