@@ -215,7 +215,29 @@ load_config() {
     # Let's try with the final pixel (bottom right corner of the screen)
     pixel_bytes="$((BPP>>3))"
     pixel_address="$((((viewWidth - 1) * pixel_bytes) + ((viewHeight + (viewVertOrigin - viewVertOffset) - 1) * lineLength)))"
-    pixel_value=$'\x11\x11\x11\xff'
+    # Handle various bitdepths, to be extra safe...
+    case "$pixel_bytes" in
+        4)
+            # BGRA
+            pixel_value=$'\x11\x11\x11\xff'
+        ;;
+        3)
+            # BGR
+            pixel_value=$'\x11\x11\x11'
+        ;;
+        2)
+            # Stupid RGB565
+            pixel_value=$'\x11\x11'
+        ;;
+        1)
+            # Gray8
+            pixel_value=$'\x11'
+        ;;
+        *)
+            # Alien abduction
+            pixel_value=$'\x11\x11\x11\xff'
+        ;;
+    esac
 
     # Ensure we'll restart the FBInk daemon on config (re-)load
     fbink_with_truetype=-1
@@ -583,7 +605,7 @@ main() {
                 # runs in background so next event can be listened to already
                 for i in $cfg_delay
                 do
-                    # See the lengthy note below for why we sleep first...
+                    # See the lengthy notes below for why we sleep first...
                     # TL;DR: Because we can't have nice things :(.
                     sleep $i
                     # If the pixel changed color, we're good to go!
