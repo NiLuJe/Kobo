@@ -88,6 +88,8 @@ load_config() {
     cfg_size=$(config size '0')
     cfg_fg_color=$(config fg_color 'BLACK')
     cfg_bg_color=$(config bg_color 'WHITE')
+    cfg_backgroundless=$(config backgroundless '0')
+    cfg_overlay=$(config overlay '0')
     cfg_delay=$(config delay '1 1 1')
 
     cfg_truetype=$(config truetype '')
@@ -101,12 +103,12 @@ load_config() {
     cfg_truetype_bold=$(config truetype_bold '')
     cfg_truetype_italic=$(config truetype_italic '')
     cfg_truetype_bolditalic=$(config truetype_bolditalic '')
-    cfg_truetype_padding=$(config truetype_padding '1')
+    cfg_truetype_padding=$(config truetype_padding '0')
 
     cfg_nightmode_check=$(config check_nightmode '1')
-    cfg_nightmode_file=$(config nightmode_file '/mnt/onboard/.kobo/nightmode.ini')
-    cfg_nightmode_key=$(config nightmode_key 'invertActive')
-    cfg_nightmode_value=$(config nightmode_value 'yes')
+    cfg_nightmode_file=$(config nightmode_file '/mnt/onboard/.kobo/Kobo/Kobo eReader.conf')
+    cfg_nightmode_key=$(config nightmode_key 'InvertScreen')
+    cfg_nightmode_value=$(config nightmode_value 'true')
 
     cfg_battery_min=$(config battery_min '0')
     cfg_battery_max=$(config battery_max '50')
@@ -133,6 +135,19 @@ load_config() {
     fi
 
     # calculated settings:
+    if [ "$cfg_backgroundless" != "0" ]
+    then
+        backgroundless="--bgless"
+    else
+        backgroundless=""
+    fi
+
+    if [ "$cfg_overlay" != "0" ]
+    then
+        overlay="--overlay"
+    else
+        overlay=""
+    fi
 
     # delta for sharp idle update
     set -- $cfg_delay
@@ -313,7 +328,13 @@ nightmode_check() {
 
         if [ "$nightmode" = "$cfg_nightmode_value" ]
         then
-            nightmode="--invert"
+            # We need hardware nightmode in overlay mode...
+            if [ "$cfg_overlay" != "0" ]
+            then
+                nightmode="--nightmode"
+            else
+                nightmode="--invert"
+            fi
         else
             nightmode=""
         fi
@@ -417,7 +438,7 @@ fbink_check() {
 
         fbink_pid="$(fbink --daemon 1 %MINICLOCK% \
                     --truetype "$truetype",size="$cfg_truetype_size",px="$cfg_truetype_px",top="$cfg_truetype_y",bottom=0,left="$cfg_truetype_x",right=0,format \
-                    -C "$cfg_truetype_fg" -B "$cfg_truetype_bg" \
+                    -C "$cfg_truetype_fg" -B "$cfg_truetype_bg" $backgroundless $overlay \
                     $nightmode)"
         if [ $? -eq 0 ] && fbink_is_up
         then
@@ -440,7 +461,7 @@ fbink_check() {
         fbink_pid="$(fbink --daemon 1 %MINICLOCK% \
                     -x "$cfg_column" -X "$cfg_offset_x" -y "$cfg_row" -Y "$cfg_offset_y" \
                     -F "$cfg_font" -S "$cfg_size" \
-                    -C "$cfg_fg_color" -B "$cfg_bg_color" \
+                    -C "$cfg_fg_color" -B "$cfg_bg_color" $backgroundless $overlay \
                     $nightmode)"
         if [ $? -eq 0 ] && fbink_is_up
         then
