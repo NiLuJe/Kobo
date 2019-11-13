@@ -680,7 +680,7 @@ main() {
                     #       And my guess is there's a double-blit involved, because we get erased by the page-turn :/.
                     if [ "${pixel}" = ${pixel_value} ]
                     then
-                        do_debug_log "-- sentinel pixel hasn't been updated, delay -- $i"
+                        debug_log && do_debug_log "-- sentinel pixel hasn't been updated, delay -- $i"
                         continue
                     else
                         update
