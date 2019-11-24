@@ -1,9 +1,9 @@
 #!/bin/sh
 
-export LD_LIBRARY_PATH="/usr/local/MiniClock:$LD_LIBRARY_PATH"
-PATH="/usr/local/MiniClock:$PATH"
+export LD_LIBRARY_PATH="/usr/local/MiniClock:${LD_LIBRARY_PATH}"
+PATH="/usr/local/MiniClock:${PATH}"
 BASE="/mnt/onboard/.addons/miniclock"
-CONFIGFILE="$BASE/miniclock.cfg"
+CONFIGFILE="${BASE}/miniclock.cfg"
 # Use a custom FBInk pipe
 export FBINK_NAMED_PIPE="/tmp/MiniClock/fbink-fifo"
 
@@ -195,7 +195,7 @@ load_config() {
     esac
 
     do_debug_log() {
-        echo "$@" >> /mnt/onboard/.addons/miniclock/debuglog.txt
+        echo "$@" >> "${BASE}/debuglog.txt"
     }
 
     if [ "$cfg_debug" = "1" ]
@@ -268,6 +268,12 @@ load_config() {
             pixel_value=$'\x11\x11\x11\xff'
         ;;
     esac
+
+    # Make sure font paths are absolute, because the FBInk daemon has a different PWD than us.
+    [ "${cfg_truetype:0:1}" != "/" ] && cfg_truetype="${BASE}/${cfg_truetype}"
+    [ "${cfg_truetype_bold:0:1}" != "/" ] && cfg_truetype_bold="${BASE}/${cfg_truetype_bold}"
+    [ "${cfg_truetype_italic:0:1}" != "/" ] && cfg_truetype_italic="${BASE}/${cfg_truetype_italic}"
+    [ "${cfg_truetype_bolditalic:0:1}" != "/" ] && cfg_truetype_bolditalic="${BASE}/${cfg_truetype_bolditalic}"
 
     # Ensure we'll restart the FBInk daemon on config (re-)load
     fbink_with_truetype=-1
@@ -434,7 +440,7 @@ kill_fbink() {
 # (re-)start the FBInk daemon (but only if we need to swap between OT/bitmap fonts)
 fbink_check() {
     # NOTE: Technically, we only need to be able to read the fonts at daemon startup.
-    #       With a bit of trickery, we could probably maange to keep a previous truetype daemon up during USBMS sessions...
+    #       With a bit of trickery, we could probably manage to keep a previous truetype daemon up during USBMS sessions...
     if [ -f "$cfg_truetype" ]
     then
         if [ "$fbink_with_truetype" -eq "1" ]
