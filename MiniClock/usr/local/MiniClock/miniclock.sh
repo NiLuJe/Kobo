@@ -27,9 +27,9 @@ udev_workarounds() {
 
     # udev might call twice
     mkdir /tmp/MiniClock || exit
-    # /tmp is mounted relatime, so we need something outside of where the FBInk FIFO lives,
-    # otherwise writing to the FIFO updates the folder's atime, and fucks with the config ts checks...
-    touch /tmp/miniclock.ts
+    # /tmp is mounted relatime, so we need to check a child file, and not our own folder,
+    # otherwise, writing to a child file (like, say, the FBInk FIFO) updates the parent folder's atime.
+    touch /tmp/MiniClock/config.ts
 }
 
 # nickel stuff
@@ -67,9 +67,9 @@ uninstall_check() {
 # loads a config file but only if it was never loaded or changed since last load
 load_config() {
     [ -z "${config_loaded:-}" ] || grep -q /mnt/onboard /proc/mounts || return 1 # not mounted
-    [ -z "${config_loaded:-}" ] || [ "$CONFIGFILE" -nt /tmp/miniclock.ts -o "$CONFIGFILE" -ot /tmp/miniclock.ts ] || return 1 # not changed
+    [ -z "${config_loaded:-}" ] || [ "$CONFIGFILE" -nt /tmp/MiniClock/config.ts -o "$CONFIGFILE" -ot /tmp/MiniClock/config.ts ] || return 1 # not changed
     config_loaded=1
-    touch -r "$CONFIGFILE" /tmp/miniclock.ts # remember timestamp
+    touch -r "$CONFIGFILE" /tmp/MiniClock/config.ts # remember timestamp
 
     uninstall_check
     cfg_debug=$(config debug '0')
