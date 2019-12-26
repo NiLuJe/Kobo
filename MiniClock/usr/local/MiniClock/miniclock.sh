@@ -349,8 +349,8 @@ nightmode_check() {
 
         if [ "$nightmode" = "$cfg_nightmode_value" ]
         then
-            # We need hardware nightmode in overlay mode...
-            if [ "$cfg_overlay" != "0" ]
+            # We need hardware nightmode in overlay or bgless mode...
+            if [ "$cfg_overlay" != "0" -o "$cfg_backgroundless" != "0" ]
             then
                 nightmode="--nightmode"
             else
