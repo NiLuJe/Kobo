@@ -458,7 +458,7 @@ really_kill_fbink() {
         # If the FIFO is somehow still there, remove it.
         if [ -p "${FBINK_NAMED_PIPE}" ]
         then
-            rf -f "${FBINK_NAMED_PIPE}"
+            rm -f "${FBINK_NAMED_PIPE}"
             debug_log && do_debug_log "-- removed broken FBInk pipe --"
         fi
     fi
