@@ -505,6 +505,31 @@ fbink_check() {
     fi
 }
 
+# Refresh our own fb state if need be, much like FBInk's fbink_reinit
+fbink_reinit() {
+    # NOTE: In order to make the pixel/dd shenanigans accurate,
+    #       we need to ensure the address and size of said pixel are up to date,
+    #       given Kobo's propension for bitdepth & rotation changes...
+    #       In order to avoid an useless fork if we were to simply always run refresh_fb_data,
+    #       we'll mimic FBInk's fbink_reinit logic with clunky shell builtins.
+    #       Busybox being what it is, this is probably barely any faster than just always running refresh_fb_data...
+    #       Oh, well...
+    local new_bpp new_rota
+    IFS= read -r new_bpp < "/sys/class/graphics/fb0/bits_per_pixel"
+    IFS= read -r new_rota < "/sys/class/graphics/fb0/rotate"
+    if [ "${BPP}" != "${new_bpp}" ]
+    then
+        debug_log && do_debug_log "-- detected a change in framebuffer bitdepth, refreshing -- ${BPP} -> ${new_bpp}"
+        refresh_fb_data
+        debug_log && do_debug_log "-- new fb state -- rota ${currentRota} @ ${BPP}bpp"
+    elif [ "${currentRota}" != "${new_rota}" ]
+    then
+        debug_log && do_debug_log "-- detected a change in framebuffer rotation, refreshing -- ${currentRota} -> ${new_rota}"
+        refresh_fb_data
+        debug_log && do_debug_log "-- new fb state -- rota ${currentRota} @ ${BPP}bpp"
+    fi
+}
+
 update() {
     sleep 0.1
 
@@ -665,6 +690,7 @@ main() {
             nightmode_check
             frontlight_check
             fbink_check
+            fbink_reinit
             check_event $(devinputeventdump $cfg_input_devices 2>/dev/null)
         do
             # whitelisted/graylisted event
@@ -680,29 +706,6 @@ main() {
             debug_log && do_debug_log "-- cfg_delay = '$cfg_delay' --"
             (
                 # The whole subshell runs in the background so the next event can be listened to already
-
-                # NOTE: In order to make the pixel/dd shenanigans accurate,
-                #       we need to ensure the address and size of said pixel are up to date,
-                #       given Kobo's propension for bitdepth & rotation changes...
-                #       In order to avoid an useless fork if we were to simply always run refresh_fb_data,
-                #       we'll mimic FBInk's fbink_reinit logic with clunky shell builtins.
-                #       Busybox being what it is, this is probably barely any faster than just always running refresh_fb_data...
-                #       Oh, well...
-                local new_bpp new_rota
-                IFS= read -r new_bpp < "/sys/class/graphics/fb0/bits_per_pixel"
-                IFS= read -r new_rota < "/sys/class/graphics/fb0/rotate"
-                if [ "${BPP}" != "${new_bpp}" ]
-                then
-                    debug_log && do_debug_log "-- detected a change in framebuffer bitdepth, refreshing -- ${BPP} -> ${new_bpp}"
-                    refresh_fb_data
-                    debug_log && do_debug_log "-- new fb state -- rota ${currentRota} @ ${BPP}bpp"
-                elif [ "${currentRota}" != "${new_rota}" ]
-                then
-                    debug_log && do_debug_log "-- detected a change in framebuffer rotation, refreshing -- ${currentRota} -> ${new_rota}"
-                    refresh_fb_data
-                    debug_log && do_debug_log "-- new fb state -- rota ${currentRota} @ ${BPP}bpp"
-                fi
-
                 for i in $cfg_delay
                 do
                     # See the lengthy notes below for why we sleep first...
