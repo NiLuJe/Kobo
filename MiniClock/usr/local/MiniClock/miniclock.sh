@@ -64,6 +64,38 @@ uninstall_check() {
     fi
 }
 
+# Refresh our local fb state data, in order to have up-to-date info for accurate pixel watching...
+refresh_fb_data() {
+    # We'll need the up to date fb state for the pixel watching...
+    eval $(fbink -e)
+    # Let's try with the final pixel (bottom right corner of the screen)
+    pixel_bytes="$((BPP>>3))"
+    pixel_address="$((((viewWidth - 1) * pixel_bytes) + ((viewHeight + (viewVertOrigin - viewVertOffset) - 1) * lineLength)))"
+    # Handle various bitdepths, to be extra safe...
+    case "$pixel_bytes" in
+        4)
+            # BGRA
+            pixel_value=$'\x11\x11\x11\xff'
+        ;;
+        3)
+            # BGR
+            pixel_value=$'\x11\x11\x11'
+        ;;
+        2)
+            # Stupid RGB565
+            pixel_value=$'\x11\x11'
+        ;;
+        1)
+            # Gray8
+            pixel_value=$'\x11'
+        ;;
+        *)
+            # Alien abduction
+            pixel_value=$'\x11\x11\x11\xff'
+        ;;
+    esac
+}
+
 # loads a config file but only if it was never loaded or changed since last load
 load_config() {
     [ -z "${config_loaded:-}" ] || grep -q /mnt/onboard /proc/mounts || return 1 # not mounted
@@ -240,34 +272,11 @@ load_config() {
     done
     debug_log && do_debug_log "-- cfg_graylist (str2int) = '$cfg_graylist' --"
 
-    # We'll need a mostly up to date fb state for the pixel watching...
-    eval $(fbink -e)
-    # Let's try with the final pixel (bottom right corner of the screen)
-    pixel_bytes="$((BPP>>3))"
-    pixel_address="$((((viewWidth - 1) * pixel_bytes) + ((viewHeight + (viewVertOrigin - viewVertOffset) - 1) * lineLength)))"
-    # Handle various bitdepths, to be extra safe...
-    case "$pixel_bytes" in
-        4)
-            # BGRA
-            pixel_value=$'\x11\x11\x11\xff'
-        ;;
-        3)
-            # BGR
-            pixel_value=$'\x11\x11\x11'
-        ;;
-        2)
-            # Stupid RGB565
-            pixel_value=$'\x11\x11'
-        ;;
-        1)
-            # Gray8
-            pixel_value=$'\x11'
-        ;;
-        *)
-            # Alien abduction
-            pixel_value=$'\x11\x11\x11\xff'
-        ;;
-    esac
+    # NOTE: Ideally, this ought to be the only time we need to refresh this,
+    #       but Kobo bitdepth & rotation shenanigans make this more annoying than it ought to,
+    #       c.f., the matching note in main()...
+    refresh_fb_data
+    debug_log && do_debug_log "-- current fb state -- rota ${currentRota} @ ${BPP}bpp"
 
     # Make sure font paths are absolute, because the FBInk daemon has a different PWD than us.
     [ "${cfg_truetype:0:1}" != "/" ] && cfg_truetype="${BASE}/${cfg_truetype}"
@@ -667,7 +676,19 @@ main() {
             pkill -P $$ && debug_log && do_debug_log "-- killed previous update task --"
             debug_log && do_debug_log "-- cfg_delay = '$cfg_delay' --"
             (
-                # runs in background so next event can be listened to already
+                # The whole subshell runs in the background so the next event can be listened to already
+
+                # NOTE: In order to make the pixel/dd shenanigans accurate,
+                #       we need to ensure the address and size of said pixel are up to date,
+                #       given Kobo's propension for bitdepth & rotation changes...
+                #       Ideally, we'd mimic FBInk's fbink_reinit logic,
+                #       but we don't have access to a fork-less way of reading file content,
+                #       (i.e., we can't do $(< /sys/class/graphics/fb0/bits_per_pixel) because busybox -_-").
+                #       Since we need to check *two* sysfs entries (bits_per_pixel & rotate),
+                #       it turns out it's faster to just always re-run our own logic,
+                #       which only incurs a single fork for fbink -e...
+                refresh_fb_data
+
                 for i in $cfg_delay
                 do
                     # See the lengthy notes below for why we sleep first...
