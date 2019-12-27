@@ -442,7 +442,25 @@ kill_fbink() {
     if fbink_is_up
     then
         kill -TERM $fbink_pid
-        debug_log && do_debug_log "-- killed FBInk daemon -- ${fbink_pid}"
+        debug_log && do_debug_log "-- killed FBInk daemon -- ${fbink_pid} ${1}"
+    fi
+}
+
+# Attempt to recover in case something awry happens, and we're left with no daemon but a FIFO,
+# which would prevent a new daemon from respawning...
+really_kill_fbink() {
+    if ! fbink_is_up
+    then
+        # If there's a stray MiniClock FBInk daemon, kill it.
+        fbink_pid="$(pgrep -f 'fbink --daemon 1 %MINICLOCK%')"
+        kill_fbink "(stray)"
+
+        # If the FIFO is somehow still there, remove it.
+        if [ -p "${FBINK_NAMED_PIPE}" ]
+        then
+            rf -f "${FBINK_NAMED_PIPE}"
+            debug_log && do_debug_log "-- removed broken FBInk pipe --"
+        fi
     fi
 }
 
@@ -454,8 +472,12 @@ fbink_check() {
     then
         if [ "$fbink_with_truetype" -eq "1" ]
         then
-            debug_log && do_debug_log "-- truetype FBInk daemon is already up --"
-            return
+            # Double-check that nothing awful happened to the FBInk daemon...
+            if fbink_is_up
+            then
+                debug_log && do_debug_log "-- truetype FBInk daemon is already up --"
+                return
+            fi
         fi
 
         kill_fbink
@@ -478,12 +500,18 @@ fbink_check() {
             fbink_pid=''
             fbink_with_truetype=-1
             debug_log && do_debug_log "-- failed to launch truetype FBInk daemon"
+            # Attempt to recover...
+            really_kill_fbink
         fi
     else
         if [ "$fbink_with_truetype" -eq "0" ]
         then
-            debug_log && do_debug_log "-- bitmap FBInk daemon is already up --"
-            return
+            # Double-check that nothing awful happened to the FBInk daemon...
+            if fbink_is_up
+            then
+                debug_log && do_debug_log "-- bitmap FBInk daemon is already up --"
+                return
+            fi
         fi
 
         kill_fbink
@@ -501,6 +529,8 @@ fbink_check() {
             fbink_pid=''
             fbink_with_truetype=-1
             debug_log && do_debug_log "-- failed to launch bitmap FBInk daemon"
+            # Attempt to recover...
+            really_kill_fbink
         fi
     fi
 }
