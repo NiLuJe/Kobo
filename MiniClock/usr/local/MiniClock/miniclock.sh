@@ -684,13 +684,24 @@ main() {
                 # NOTE: In order to make the pixel/dd shenanigans accurate,
                 #       we need to ensure the address and size of said pixel are up to date,
                 #       given Kobo's propension for bitdepth & rotation changes...
-                #       Ideally, we'd mimic FBInk's fbink_reinit logic,
-                #       but we don't have access to a fork-less way of reading file content,
-                #       (i.e., we can't do $(< /sys/class/graphics/fb0/bits_per_pixel) because busybox -_-").
-                #       Since we need to check *two* sysfs entries (bits_per_pixel & rotate),
-                #       it turns out it's faster to just always re-run our own logic,
-                #       which only incurs a single fork for fbink -e...
-                refresh_fb_data
+                #       In order to avoid an useless fork if we were to simply always run refresh_fb_data,
+                #       we'll mimic FBInk's fbink_reinit logic with clunky shell builtins.
+                #       Busybox being what it is, this is probably barely any faster than just always running refresh_fb_data...
+                #       Oh, well...
+                local new_bpp new_rota
+                IFS= read -r new_bpp < "/sys/class/graphics/fb0/bits_per_pixel"
+                IFS= read -r new_rota < "/sys/class/graphics/fb0/rotate"
+                if [ "${BPP}" != "${new_bpp}" ]
+                then
+                    debug_log && do_debug_log "-- detected a change in framebuffer bitdepth, refreshing -- ${BPP} -> ${new_bpp}"
+                    refresh_fb_data
+                    debug_log && do_debug_log "-- new fb state -- rota ${currentRota} @ ${BPP}bpp"
+                elif [ "${currentRota}" != "${new_rota}" ]
+                then
+                    debug_log && do_debug_log "-- detected a change in framebuffer rotation, refreshing -- ${currentRota} -> ${new_rota}"
+                    refresh_fb_data
+                    debug_log && do_debug_log "-- new fb state -- rota ${currentRota} @ ${BPP}bpp"
+                fi
 
                 for i in $cfg_delay
                 do
@@ -708,7 +719,7 @@ main() {
                     # NOTE: Unfortunately, that's not the only potential issue: the crappy performance of the ePub reader
                     #       also means that we'd almost always print before the pageturn.
                     #       And my guess is there's a double-blit involved, because we get erased by the page-turn :/.
-                    if [ "${pixel}" = ${pixel_value} ]
+                    if [ "${pixel}" = "${pixel_value}" ]
                     then
                         debug_log && do_debug_log "-- sentinel pixel hasn't been updated, delay -- $i"
                         continue
