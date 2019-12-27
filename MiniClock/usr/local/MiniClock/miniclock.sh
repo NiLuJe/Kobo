@@ -423,7 +423,7 @@ fbink_is_up() {
         return 1
     fi
 
-    if kill -0 $fbink_pid
+    if [ -d "/proc/${fbink_pid}" ]
     then
         # It's alive
         if grep -q '%MINICLOCK%' /proc/${fbink_pid}/cmdline
