@@ -653,6 +653,9 @@ main() {
 
     udev_workarounds
     wait_for_nickel
+    # NOTE: Another shaky workaround to the outdated fb state issue would be to wait for a 32bpp fb here...
+    #       That'd give the shaft to older, 16bpp FW, though :/.
+    #       And wouldn't help with rotation updates (to which, granted, we don't lose too much accuracy if ignored).
 
     while : # main loop
     do
