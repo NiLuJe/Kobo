@@ -274,7 +274,7 @@ load_config() {
 
     # NOTE: Ideally, this ought to be the only time we need to refresh this,
     #       but Kobo bitdepth & rotation shenanigans make this more annoying than it ought to,
-    #       c.f., the matching note in main()...
+    #       c.f., the matching note in fbink_reinit() (both here and in FBInk)...
     refresh_fb_data
     debug_log && do_debug_log "-- current fb state -- rota ${currentRota} @ ${BPP}bpp"
 
