@@ -185,8 +185,8 @@ load_config() {
 
     # delta for sharp idle update
     set -- $cfg_delay
-    cfg_delta=$(awk "BEGIN {print ${i} + 1}")
-    cfg_delta=${cfg_delta:-0}
+    #cfg_delta=$(awk "BEGIN {print ${i} + 1}")
+    #cfg_delta=${cfg_delta:-0}
 
     # padding is spaces for now
     if [ "$cfg_truetype_padding" != "0" ]
