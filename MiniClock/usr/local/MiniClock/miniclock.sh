@@ -124,6 +124,7 @@ load_config() {
     cfg_backgroundless=$(config backgroundless '0')
     cfg_overlay=$(config overlay '0')
     cfg_delay=$(config delay '1 1 1')
+    cfg_aggressive_timing=$(config aggressive_timing '0')
 
     cfg_truetype=$(config truetype '')
     cfg_truetype_size=$(config truetype_size '16.0')
@@ -738,12 +739,16 @@ main() {
                 # The whole subshell runs in the background so the next event can be listened to already
                 for i in $cfg_delay
                 do
-                    # See the lengthy notes below for why we sleep first...
+                    # See the lengthy notes below for why we sleep first by default...
                     # TL;DR: Because we can't have nice things :(.
-                    sleep $i
+                    if [ "${cfg_aggressive_timing}" -eq "0" ]
+                    then
+                        debug_log && do_debug_log "-- early delay -- $i"
+                        sleep $i
+                    fi
                     # If the pixel changed color, we're good to go!
                     pixel="$(dd if=/dev/fb0 skip=${pixel_address} count=${pixel_bytes} bs=1 2>/dev/null)"
-                    # NOTE: Only sleeping in the "delay" branch would allow us better reactivity,
+                    # NOTE: Only sleeping in the "delay" branch allows us better reactivity,
                     #       at the expense of potentially being overriden by a button highlight.
                     #       f.g., if you print to the bottom right corner, that's smack inside the Library's next page button,
                     #       so we risk printing *before* the highlight disappears,
@@ -752,9 +757,15 @@ main() {
                     # NOTE: Unfortunately, that's not the only potential issue: the crappy performance of the ePub reader
                     #       also means that we'd almost always print before the pageturn.
                     #       And my guess is there's a double-blit involved, because we get erased by the page-turn :/.
+                    # NOTE: You can now flip between those two behaviors via the aggressive_timing config switch :).
                     if [ "${pixel}" = "${pixel_value}" ]
                     then
-                        debug_log && do_debug_log "-- sentinel pixel hasn't been updated, delay -- $i"
+                        debug_log && do_debug_log "-- sentinel pixel hasn't been updated yet"
+                        if [ "${cfg_aggressive_timing}" -ne "0" ]
+                        then
+                            debug_log && do_debug_log "-- late delay -- $i"
+                            sleep $i
+                        fi
                         continue
                     else
                         update
