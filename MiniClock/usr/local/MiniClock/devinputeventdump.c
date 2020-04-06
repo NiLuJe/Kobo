@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
                 exit(10);
             }
 
-            if(b < sizeof(*events)) {
+            if((size_t) b < sizeof(*events)) {
                 fprintf(stderr, "Short read %zd bytes, expected %zu...\n", b, sizeof(*events));
             }
 
