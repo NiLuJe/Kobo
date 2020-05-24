@@ -278,6 +278,8 @@ load_config() {
     #       c.f., the matching note in fbink_reinit() (both here and in FBInk)...
     refresh_fb_data
     debug_log && do_debug_log "-- current fb state -- rota ${currentRota} @ ${BPP}bpp"
+    # Now that we've got it (from the eval in refresh_fb_data), print the FBInk version, too.
+    debug_log && do_debug_log "-- using FBInk ${FBINK_VERSION} --"
 
     # Make sure font paths are absolute, because the FBInk daemon has a different PWD than us.
     [ "${cfg_truetype:0:1}" != "/" ] && cfg_truetype="${BASE}/${cfg_truetype}"
