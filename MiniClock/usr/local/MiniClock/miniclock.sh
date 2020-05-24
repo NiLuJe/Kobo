@@ -502,7 +502,7 @@ fbink_check() {
         else
             fbink_pid=''
             fbink_with_truetype=-1
-            debug_log && do_debug_log "-- failed to launch truetype FBInk daemon"
+            debug_log && do_debug_log "-- failed to launch truetype FBInk daemon --"
             # Attempt to recover...
             really_kill_fbink
         fi
@@ -531,7 +531,7 @@ fbink_check() {
         else
             fbink_pid=''
             fbink_with_truetype=-1
-            debug_log && do_debug_log "-- failed to launch bitmap FBInk daemon"
+            debug_log && do_debug_log "-- failed to launch bitmap FBInk daemon --"
             # Attempt to recover...
             really_kill_fbink
         fi
@@ -762,7 +762,7 @@ main() {
                     # NOTE: You can now flip between those two behaviors via the aggressive_timing config switch :).
                     if [ "${pixel}" = "${pixel_value}" ]
                     then
-                        debug_log && do_debug_log "-- sentinel pixel hasn't been updated yet"
+                        debug_log && do_debug_log "-- sentinel pixel hasn't been updated yet --"
                         if [ "${cfg_aggressive_timing}" -ne "0" ]
                         then
                             debug_log && do_debug_log "-- late delay -- $i"
