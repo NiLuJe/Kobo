@@ -70,7 +70,14 @@ refresh_fb_data() {
     eval $(fbink -e)
     # Let's try with the final pixel (bottom right corner of the screen)
     pixel_bytes="$((BPP>>3))"
-    pixel_address="$((((viewWidth - 1) * pixel_bytes) + ((viewHeight + (viewVertOrigin - viewVertOffset) - 1) * lineLength)))"
+    # NOTE: Handle quirky rotated fb for older FW versions...
+    if [ "${isNTX16bLandscape}" -eq 1 ]
+    then
+        # c.f., initialize_fbink(), in this state, (screen|view)Height == xres & (screen|view)Width == yres
+        pixel_address="$((((viewHeight - 1) * pixel_bytes) + ((viewWidth + (viewVertOrigin - viewVertOffset) - 1) * lineLength)))"
+    else
+        pixel_address="$((((viewWidth - 1) * pixel_bytes) + ((viewHeight + (viewVertOrigin - viewVertOffset) - 1) * lineLength)))"
+    fi
     # Handle various bitdepths, to be extra safe...
     case "$pixel_bytes" in
         4)
