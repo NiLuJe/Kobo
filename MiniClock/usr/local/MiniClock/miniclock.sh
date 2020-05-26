@@ -284,7 +284,7 @@ load_config() {
     #       but Kobo bitdepth & rotation shenanigans make this more annoying than it ought to,
     #       c.f., the matching note in fbink_reinit() (both here and in FBInk)...
     refresh_fb_data
-    debug_log && do_debug_log "-- current fb state -- rota ${currentRota} @ ${BPP}bpp"
+    debug_log && do_debug_log "-- current fb state -- rota ${currentRota} @ ${BPP}bpp (quirky: ${isNTX16bLandscape})"
     # Now that we've got it (from the eval in refresh_fb_data), print the FBInk version, too.
     debug_log && do_debug_log "-- using FBInk ${FBINK_VERSION} --"
 
@@ -561,12 +561,12 @@ fbink_reinit() {
     then
         debug_log && do_debug_log "-- detected a change in framebuffer bitdepth, refreshing -- ${BPP} -> ${new_bpp}"
         refresh_fb_data
-        debug_log && do_debug_log "-- new fb state -- rota ${currentRota} @ ${BPP}bpp"
+        debug_log && do_debug_log "-- new fb state -- rota ${currentRota} @ ${BPP}bpp (quirky: ${isNTX16bLandscape})"
     elif [ "${currentRota}" != "${new_rota}" ]
     then
         debug_log && do_debug_log "-- detected a change in framebuffer rotation, refreshing -- ${currentRota} -> ${new_rota}"
         refresh_fb_data
-        debug_log && do_debug_log "-- new fb state -- rota ${currentRota} @ ${BPP}bpp"
+        debug_log && do_debug_log "-- new fb state -- rota ${currentRota} @ ${BPP}bpp (quirky: ${isNTX16bLandscape})"
     fi
 }
 
