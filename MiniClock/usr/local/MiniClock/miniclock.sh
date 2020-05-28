@@ -76,9 +76,9 @@ refresh_fb_data() {
     if [ "${isNTX16bLandscape}" -eq 1 ]
     then
         # c.f., initialize_fbink(), in this state, (screen|view)Height == xres & (screen|view)Width == yres
-        pixel_address="$((((viewHeight >> 1) * pixel_bytes) + ((viewWidth >> 1) * lineLength)))"
+        pixel_address="$((((screenHeight >> 1) * pixel_bytes) + ((screenWidth >> 1) * lineLength)))"
     else
-        pixel_address="$((((viewWidth >> 1) * pixel_bytes) + ((viewHeight >> 1) * lineLength)))"
+        pixel_address="$((((screenWidth >> 1) * pixel_bytes) + ((screenHeight >> 1) * lineLength)))"
     fi
     # Handle various bitdepths, to be extra safe...
     case "$pixel_bytes" in
