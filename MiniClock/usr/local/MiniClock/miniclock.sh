@@ -68,8 +68,7 @@ uninstall_check() {
 refresh_fb_data() {
     # We'll need the up to date fb state for the pixel watching...
     eval $(fbink -e)
-    # Let's try with a pixel very near the bottom right corner of the screen.
-    # NOTE: The actual final pixel (possibly the final column) is not always painted by Nickel, for some strange reason...
+    # Let's try with a pixel very near the bottom right corner of the screen (on the off-chance the final row/column aren't always painted).
     pixel_bytes="$((BPP>>3))"
     # NOTE: Handle quirky rotated fb for older FW versions...
     if [ "${isNTX16bLandscape}" -eq 1 ]
@@ -83,23 +82,23 @@ refresh_fb_data() {
     case "$pixel_bytes" in
         4)
             # BGRA
-            pixel_value=$'\xee\xee\xee\xff'
+            pixel_value=$'\xde\xad\xbe\xef'
         ;;
         3)
             # BGR
-            pixel_value=$'\xee\xee\xee'
+            pixel_value=$'\xfe\xdf\xed'
         ;;
         2)
             # Stupid RGB565
-            pixel_value=$'\x7d\xef'
+            pixel_value=$'\xde\xad'
         ;;
         1)
             # Gray8
-            pixel_value=$'\xee'
+            pixel_value=$'\x42'
         ;;
         *)
             # Alien abduction
-            pixel_value=$'\xee\xee\xee\xff'
+            pixel_value=$'\xde\xad\xbe\xef'
         ;;
     esac
 }
