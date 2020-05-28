@@ -82,23 +82,23 @@ refresh_fb_data() {
     case "$pixel_bytes" in
         4)
             # BGRA
-            pixel_value=$'\x11\x11\x11\xff'
+            pixel_value=$'\xee\xee\xee\xff'
         ;;
         3)
             # BGR
-            pixel_value=$'\x11\x11\x11'
+            pixel_value=$'\xee\xee\xee'
         ;;
         2)
             # Stupid RGB565
-            pixel_value=$'\x11\x11'
+            pixel_value=$'\x7d\xef'
         ;;
         1)
             # Gray8
-            pixel_value=$'\x11'
+            pixel_value=$'\xee'
         ;;
         *)
             # Alien abduction
-            pixel_value=$'\x11\x11\x11\xff'
+            pixel_value=$'\xee\xee\xee\xff'
         ;;
     esac
 }
