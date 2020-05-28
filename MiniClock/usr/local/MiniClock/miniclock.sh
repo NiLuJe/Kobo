@@ -86,7 +86,7 @@ refresh_fb_data() {
         ;;
         3)
             # BGR
-            pixel_value=$'\xfe\xdf\xed'
+            pixel_value=$'\xd0\x0d\xad'
         ;;
         2)
             # Stupid RGB565
