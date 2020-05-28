@@ -68,15 +68,16 @@ uninstall_check() {
 refresh_fb_data() {
     # We'll need the up to date fb state for the pixel watching...
     eval $(fbink -e)
-    # Let's try with the final pixel (bottom right corner of the screen)
+    # Let's try with a pixel very near the bottom right corner of the screen.
+    # NOTE: The actual final pixel (possibly the final column) is not always painted by Nickel, for some strange reason...
     pixel_bytes="$((BPP>>3))"
     # NOTE: Handle quirky rotated fb for older FW versions...
     if [ "${isNTX16bLandscape}" -eq 1 ]
     then
         # c.f., initialize_fbink(), in this state, (screen|view)Height == xres & (screen|view)Width == yres
-        pixel_address="$((((viewHeight - 1) * pixel_bytes) + ((viewWidth + (viewVertOrigin - viewVertOffset) - 1) * lineLength)))"
+        pixel_address="$((((viewHeight - 2) * pixel_bytes) + ((viewWidth + (viewVertOrigin - viewVertOffset) - 2) * lineLength)))"
     else
-        pixel_address="$((((viewWidth - 1) * pixel_bytes) + ((viewHeight + (viewVertOrigin - viewVertOffset) - 1) * lineLength)))"
+        pixel_address="$((((viewWidth - 2) * pixel_bytes) + ((viewHeight + (viewVertOrigin - viewVertOffset) - 2) * lineLength)))"
     fi
     # Handle various bitdepths, to be extra safe...
     case "$pixel_bytes" in
