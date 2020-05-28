@@ -68,15 +68,17 @@ uninstall_check() {
 refresh_fb_data() {
     # We'll need the up to date fb state for the pixel watching...
     eval $(fbink -e)
-    # Let's try with a pixel very near the bottom right corner of the screen (on the off-chance the final row/column aren't always painted).
+    # Let's try with a pixel in the middle (+/- viewport quirks) of the screen, to account for edge-cases where edge rows/columns may not be painted to...
+    # This should never actually make it to a refresh, so we don't particularly care about its position.
+    # And even if it did, you'd be hard-pressed to spot a single pixel on a 300dpi screen, especially one that's almost white...
     pixel_bytes="$((BPP>>3))"
     # NOTE: Handle quirky rotated fb for older FW versions...
     if [ "${isNTX16bLandscape}" -eq 1 ]
     then
         # c.f., initialize_fbink(), in this state, (screen|view)Height == xres & (screen|view)Width == yres
-        pixel_address="$((((viewHeight - 2) * pixel_bytes) + ((viewWidth + (viewVertOrigin - viewVertOffset) - 2) * lineLength)))"
+        pixel_address="$((((viewHeight >> 1) * pixel_bytes) + ((viewWidth >> 1) * lineLength)))"
     else
-        pixel_address="$((((viewWidth - 2) * pixel_bytes) + ((viewHeight + (viewVertOrigin - viewVertOffset) - 2) * lineLength)))"
+        pixel_address="$((((viewWidth >> 1) * pixel_bytes) + ((viewHeight >> 1) * lineLength)))"
     fi
     # Handle various bitdepths, to be extra safe...
     case "$pixel_bytes" in
