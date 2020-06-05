@@ -44,7 +44,8 @@ wait_for_nickel() {
 config() {
     local key value
     key=$(grep -E "^$1\s*=" "$CONFIGFILE")
-    if [ $? -eq 0 ]
+    _ret=$?
+    if [ ${_ret} -eq 0 ]
     then
         value=$(printf "%s" "$key" | tail -n 1 | sed -r -e 's@^[^=]*=\s*@@' -e 's@\s+(#.*|)$@@')
         echo "$value"
@@ -504,7 +505,8 @@ fbink_check() {
                     --truetype "$truetype",size="$cfg_truetype_size",px="$cfg_truetype_px",top="$cfg_truetype_y",bottom=0,left="$cfg_truetype_x",right=0,format \
                     -C "$cfg_truetype_fg" -B "$cfg_truetype_bg" $backgroundless $overlay \
                     $nightmode)"
-        if [ $? -eq 0 ] && fbink_is_up
+        _ret=$?
+        if [ ${_ret} -eq 0 ] && fbink_is_up
         then
             fbink_with_truetype=1
             debug_log && do_debug_log "-- launched truetype FBInk daemon -- ${fbink_pid}"
@@ -533,7 +535,8 @@ fbink_check() {
                     -F "$cfg_font" -S "$cfg_size" \
                     -C "$cfg_fg_color" -B "$cfg_bg_color" $backgroundless $overlay \
                     $nightmode)"
-        if [ $? -eq 0 ] && fbink_is_up
+        _ret=$?
+        if [ ${_ret} -eq 0 ] && fbink_is_up
         then
             fbink_with_truetype=0
             debug_log && do_debug_log "-- launched bitmap FBInk daemon -- ${fbink_pid}"
@@ -626,9 +629,11 @@ input_event_str2int() {
     esac
 
     code=$(printf " %s \n" $@  | grep -n -F " $code ")
-    [ $? -eq 0 ] && code=$((${code%%:*}-1))
+    _ret=$?
+    [ ${_ret} -eq 0 ] && code=$((${code%%:*}-1))
     type=$(printf " %s \n" $EV | grep -n -F " $type ")
-    [ $? -eq 0 ] && type=$((${type%%:*}-1))
+    _ret=$?
+    [ ${_ret} -eq 0 ] && type=$((${type%%:*}-1))
 
     echo $type $code
 }
