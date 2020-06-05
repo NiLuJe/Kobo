@@ -109,7 +109,7 @@ refresh_fb_data() {
 # loads a config file but only if it was never loaded or changed since last load
 load_config() {
     [ -z "${config_loaded:-}" ] || grep -q /mnt/onboard /proc/mounts || return 1 # not mounted
-    [ -z "${config_loaded:-}" ] || [ "$CONFIGFILE" -nt /tmp/MiniClock/config.ts -o "$CONFIGFILE" -ot /tmp/MiniClock/config.ts ] || return 1 # not changed
+    [ -z "${config_loaded:-}" ] || [ "$CONFIGFILE" -nt /tmp/MiniClock/config.ts ] || [ "$CONFIGFILE" -ot /tmp/MiniClock/config.ts ] || return 1 # not changed
     config_loaded=1
     touch -r "$CONFIGFILE" /tmp/MiniClock/config.ts # remember timestamp
 
@@ -168,7 +168,7 @@ load_config() {
     if [ "$cfg_repeat" != "" ]
     then
         set -- $cfg_delay
-        if [ $# -eq 1 -a "$cfg_repeat" -gt 1 ]
+        if [ $# -eq 1 ] && [ "$cfg_repeat" -gt 1 ]
         then
             cfg_delay=""
             for i in $(seq 1 "$cfg_repeat")
@@ -372,7 +372,7 @@ nightmode_check() {
 
     [ ! -e /tmp/MiniClock/nightmode ] && touch /tmp/MiniClock/nightmode
 
-    if [ "$cfg_nightmode_file" -nt /tmp/MiniClock/nightmode -o "$cfg_nightmode_file" -ot /tmp/MiniClock/nightmode ]
+    if [ "$cfg_nightmode_file" -nt /tmp/MiniClock/nightmode ] || [ "$cfg_nightmode_file" -ot /tmp/MiniClock/nightmode ]
     then
         # nightmode state might have changed
         nightmode=$(CONFIGFILE="$cfg_nightmode_file" config "$cfg_nightmode_key" "not $cfg_nightmode_value")
@@ -380,7 +380,7 @@ nightmode_check() {
         if [ "$nightmode" = "$cfg_nightmode_value" ]
         then
             # We need hardware nightmode in overlay or bgless mode...
-            if [ "$cfg_overlay" != "0" -o "$cfg_backgroundless" != "0" ]
+            if [ "$cfg_overlay" != "0" ] || [ "$cfg_backgroundless" != "0" ]
             then
                 nightmode="--nightmode"
             else
@@ -412,7 +412,7 @@ frontlight_check() {
 
     [ ! -e /tmp/MiniClock/frontlight ] && touch /tmp/MiniClock/frontlight
 
-    if [ "/mnt/onboard/.kobo/Kobo/Kobo eReader.conf" -nt /tmp/MiniClock/frontlight -o "/mnt/onboard/.kobo/Kobo/Kobo eReader.conf" -ot /tmp/MiniClock/frontlight ]
+    if [ "/mnt/onboard/.kobo/Kobo/Kobo eReader.conf" -nt /tmp/MiniClock/frontlight ] || [ "/mnt/onboard/.kobo/Kobo/Kobo eReader.conf" -ot /tmp/MiniClock/frontlight ]
     then
         # frontlight state might have changed
         frontlight=$(CONFIGFILE="/mnt/onboard/.kobo/Kobo/Kobo eReader.conf" config "FrontLightLevel" "??")
