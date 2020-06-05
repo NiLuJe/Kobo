@@ -106,6 +106,14 @@ refresh_fb_data() {
     esac
 }
 
+## Check if arg is an int
+is_integer()
+{
+    # Cheap trick ;)
+    [ "${1}" -eq "${1}" ] 2>/dev/null
+    return $?
+}
+
 # loads a config file but only if it was never loaded or changed since last load
 load_config() {
     [ -z "${config_loaded:-}" ] || grep -q /mnt/onboard /proc/mounts || return 1 # not mounted
@@ -291,6 +299,24 @@ load_config() {
     # Now that we've got it (from the eval in refresh_fb_data), print the FBInk version, too.
     debug_log && do_debug_log "-- using FBInk ${FBINK_VERSION} --"
 
+    # Check the FW version, to see if we can enforce nightmode support in FBInk if we detect a recent enough version...
+    NICKEL_BUILD="$(awk 'BEGIN {FS=","}; {split($3, FW, "."); print FW[3]};' "/mnt/onboard/.kobo/version")"
+    debug_log && do_debug_log "-- running on Nickel build number ${NICKEL_BUILD} --"
+
+    # If it's sane, and newer than 4.2.8432, enforce HW inversion support
+    # This is only useful for the Aura, which used to be crashy on earlier kernels...
+    # NOTE: Final Aura kernel is r7860_#2049 built 01/09/17 05:33:13;
+    #       FW 4.2.8432 was released February 2017;
+    #       the previous FW release was 3.19.5761 in December 2015 (!).
+    if is_integer "${NICKEL_BUILD}" && [ "${NICKEL_BUILD}" -ge "8432" ]
+    then
+        export FBINK_ALLOW_HW_INVERT=1
+        debug_log && do_debug_log "-- enforcing HW inversion support --"
+    else
+        unset FBINK_ALLOW_HW_INVERT
+        debug_log && do_debug_log "-- FW version too old to enforce HW inversion support --"
+    fi
+
     # Make sure font paths are absolute, because the FBInk daemon has a different PWD than us.
     [ "${cfg_truetype:0:1}" != "/" ] && cfg_truetype="${BASE}/${cfg_truetype}"
     [ "${cfg_truetype_bold:0:1}" != "/" ] && cfg_truetype_bold="${BASE}/${cfg_truetype_bold}"
@@ -307,14 +333,6 @@ str_replace() {
     pre=${1%%"$2"*}
     post=${1#*"$2"}
     echo "$pre$3$post"
-}
-
-## Check if arg is an int
-is_integer()
-{
-    # Cheap trick ;)
-    [ "${1}" -eq "${1}" ] 2>/dev/null
-    return $?
 }
 
 # shenaniganize date (runs in a subshell)
