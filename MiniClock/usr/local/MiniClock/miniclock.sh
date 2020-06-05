@@ -321,7 +321,7 @@ shenaniganize_date() {
                 datestr=$(str_replace "$datestr" "{frontlight}" "$frontlight")
             ;;
             *{battery}*)
-                battery=$(cat "$cfg_battery_source")
+                IFS= read -r battery < "$cfg_battery_source"
                 if [ $? -eq 0 -a "$battery" -ge "$cfg_battery_min" -a "$battery" -le "$cfg_battery_max" ]
                 then
                     battery="${battery}%"
@@ -343,7 +343,7 @@ shenaniganize_date() {
                 datestr=$(str_replace "$datestr" "{month}" "$1")
             ;;
             *{debug}*)
-                read uptime runtime < /proc/uptime
+                read -r uptime runtime < /proc/uptime
                 datestr=$(str_replace "$datestr" "{debug}" "[${causality} @ ${uptime}]")
             ;;
             *)
