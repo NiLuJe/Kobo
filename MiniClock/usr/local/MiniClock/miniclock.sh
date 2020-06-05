@@ -308,6 +308,14 @@ str_replace() {
     echo "$pre$3$post"
 }
 
+## Check if arg is an int
+is_integer()
+{
+    # Cheap trick ;)
+    [ "${1}" -eq "${1}" ] 2>/dev/null
+    return $?
+}
+
 # shenaniganize date (runs in a subshell)
 shenaniganize_date() {
     local datestr=$(date "$@")
@@ -322,7 +330,7 @@ shenaniganize_date() {
             ;;
             *{battery}*)
                 IFS= read -r battery < "$cfg_battery_source"
-                if [ $? -eq 0 -a "$battery" -ge "$cfg_battery_min" -a "$battery" -le "$cfg_battery_max" ]
+                if is_integer "$battery" && [ "$battery" -ge "$cfg_battery_min" ] && [ "$battery" -le "$cfg_battery_max" ]
                 then
                     battery="${battery}%"
                 else
@@ -411,14 +419,6 @@ frontlight_check() {
         # remember timestamp so we don't have to do this every time
         touch -r "/mnt/onboard/.kobo/Kobo/Kobo eReader.conf" /tmp/MiniClock/frontlight
     fi
-}
-
-## Check if arg is an int
-is_integer()
-{
-    # Cheap trick ;)
-    [ "${1}" -eq "${1}" ] 2>/dev/null
-    return $?
 }
 
 # Check if the FBInk daemon is up
